@@ -1,0 +1,41 @@
+{
+  "name": "Avenza — Voice Banking Demo",
+  "short_name": "Avenza",
+  "description": "Voice drafts a transfer. Your fingerprint, verified by the backend, moves money.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070b16",
+  "theme_color": "#0b1020",
+  "lang": "en",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Avenza",
+      "short_name": "Open",
+      "url": "/",
+      "description": "Start a consented voice banking session"
+    }
+  ]
+}

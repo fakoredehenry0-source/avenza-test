@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Avenza voice banking layer. Voice drafts. Fingerprint moves money.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="stylesheet" href="/static/styles.css">
+  <title>Avenza</title>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">A</div>
+        <div>
+          <h1>Avenza</h1>
+          <p>Voice drafts. Your fingerprint moves money.</p>
+        </div>
+      </div>
+      <div class="badges">
+        <span id="bankBadge" class="badge">Bank: checking</span>
+        <span id="connBadge" class="badge badge-offline">Offline</span>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="status-card" aria-live="assertive" aria-atomic="true">
+        <div class="status-top">
+          <div>
+            <div id="statusWords" class="status-words">Not started</div>
+            <div id="statusDetail" class="status-detail">Record consent and enrol a fingerprint to begin.</div>
+          </div>
+          <div id="listenIndicator" class="listen-indicator" hidden>
+            <span class="dot" aria-hidden="true"></span> Listening
+          </div>
+        </div>
+        <div class="money-row">
+          <div class="money-cell">
+            <span class="label">Amount</span>
+            <strong id="amount">—</strong>
+          </div>
+          <div class="money-cell">
+            <span class="label">Verified recipient</span>
+            <strong id="recipient">—</strong>
+          </div>
+          <div class="money-cell">
+            <span class="label">Bank reference</span>
+            <strong id="reference">—</strong>
+          </div>
+        </div>
+        <div id="riskBanner" class="risk" hidden></div>
+      </section>
+
+      <section id="enrolPanel" class="panel">
+        <h2>First-time setup</h2>
+        <p class="muted">
+          Avenza needs your recorded consent and a passkey on this device. The passkey
+          is the fingerprint that approves payments. Voice alone never moves money.
+        </p>
+        <div class="form-grid">
+          <label>
+            <span>Display name</span>
+            <input id="displayName" autocomplete="name" maxlength="200" placeholder="e.g. Henry">
+          </label>
+          <label>
+            <span>Language</span>
+            <select id="language">
+              <option value="en">English (verified)</option>
+              <option value="yo">Yorùbá (unverified)</option>
+              <option value="ha">Hausa (unverified)</option>
+              <option value="ig">Igbo (unverified)</option>
+              <option value="pcm">Nigerian Pidgin (unverified)</option>
+            </select>
+          </label>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="consentCheck">
+          <span>
+            I consent to Avenza processing my voice for this session and to the
+            speech and language providers listed in the privacy notice. I understand
+            that only a fingerprint approval moves money. Consent wording version
+            <code>2026-11-08-v1</code>.
+          </span>
+        </label>
+        <div class="controls">
+          <button id="enrolBtn" class="primary" disabled>Record consent and enrol fingerprint</button>
+          <button id="devEnrolBtn" class="secondary" hidden>Dev enrolment (no fingerprint)</button>
+        </div>
+        <p id="enrolStatus" class="hint" role="status"></p>
+        <p class="hint">
+          Fingerprints need a secure context: <code>localhost</code> or HTTPS. On a phone,
+          run the HTTPS development server and open the certificate once.
+        </p>
+      </section>
+
+      <section id="sessionPanel" class="panel" hidden>
+        <div class="controls">
+          <button id="startBtn" class="primary big">Start listening</button>
+          <button id="stopBtn" class="secondary big" hidden>Stop listening</button>
+          <button id="lockBtn" class="danger">Emergency lock</button>
+          <button id="unlockBtn" class="secondary" hidden>Unlock with fingerprint</button>
+        </div>
+
+        <form id="textForm" class="text-row" autocomplete="off">
+          <label class="sr-only" for="textInput">Type a request</label>
+          <input id="textInput" placeholder="Type a request (demo fallback)" maxlength="500">
+          <button type="submit">Send</button>
+        </form>
+
+        <div class="chips" aria-label="Demo requests">
+          <button type="button" class="chip" data-text="Send five thousand naira to GTBank account 0123456789">Send ₦5,000 to Aisha Bello</button>
+          <button type="button" class="chip" data-text="Send fifty thousand naira to Access Bank account 1111222333">Send ₦50,000 to Chinedu</button>
+          <button type="button" class="chip" data-text="Show my last three transactions">Last 3 transactions</button>
+          <button type="button" class="chip" data-text="Emergency lock">Emergency lock</button>
+        </div>
+
+        <div id="approvalPanel" class="approval" hidden>
+          <h2>Fingerprint required</h2>
+          <p id="approvalSummary" class="muted"></p>
+          <div class="controls">
+            <button id="approveBtn" class="primary big">Approve with fingerprint</button>
+            <button id="devApproveBtn" class="secondary" hidden>Simulate fingerprint (dev)</button>
+            <button id="cancelApprovalBtn" class="secondary">Cancel payment</button>
+          </div>
+          <p id="approvalStatus" class="hint" role="status"></p>
+        </div>
+
+        <div class="transcript">
+          <span class="label">Heard</span>
+          <p id="transcriptText">—</p>
+        </div>
+
+        <div class="settings-row">
+          <label class="check small">
+            <input type="checkbox" id="browserSttCheck" checked>
+            <span>Use browser speech recognition (demo fallback)</span>
+          </label>
+          <label class="check small">
+            <input type="checkbox" id="debugCheck">
+            <span>Show developer tools</span>
+          </label>
+        </div>
+      </section>
+
+      <section id="debugPanel" class="panel debug" hidden>
+        <h2>Developer tools</h2>
+        <div class="form-grid">
+          <label>
+            <span>Mock bank failure switch</span>
+            <select id="bankMode">
+              <option value="normal">normal (settles)</option>
+              <option value="fail">fail (declined)</option>
+              <option value="pending">pending (settles after delay)</option>
+              <option value="timeout_before_commit">timeout before commit</option>
+              <option value="timeout_after_commit">timeout after commit (lost reply)</option>
+              <option value="slow">slow</option>
+              <option value="unavailable">unavailable</option>
+              <option value="name_unavailable">name enquiry unavailable</option>
+            </select>
+          </label>
+          <label>
+            <span>Delay (ms)</span>
+            <input id="bankDelay" type="number" min="0" max="60000" step="500" value="0">
+          </label>
+        </div>
+        <div class="controls">
+          <button id="applyBankMode" class="secondary">Apply bank mode</button>
+          <button id="clearLog" class="secondary">Clear log</button>
+        </div>
+        <div id="demoAccounts" class="accounts"></div>
+        <pre id="debugLog" class="log" aria-live="polite"></pre>
+      </section>
+
+      <footer class="footer">
+        <p>
+          <strong>Status:</strong> working prototype. The bank is
+          <span id="footerBank">simulated</span> unless a sandbox is configured.
+          Voice never authenticates. Amounts are integers in kobo. No funds are held.
+        </p>
+      </footer>
+    </main>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

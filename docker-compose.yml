@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: avenza
+      POSTGRES_PASSWORD: avenza
+      POSTGRES_DB: avenza
+    volumes:
+      - avenza-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avenza -d avenza"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://avenza:avenza@db:5432/avenza
+      # Local simulated bank. Clearly labelled in the UI and in /health.
+      BANK_MODE: mock
+      STT_PROVIDER: mock
+      TTS_PROVIDER: mock
+      ALLOW_TEXT_UTTERANCE: "true"
+      # WebAuthn must match the URL the browser shows.
+      WEBAUTHN_RP_ID: localhost
+      WEBAUTHN_RP_NAME: Avenza
+      WEBAUTHN_ORIGIN: http://localhost:8000
+      # Developer tools are on; the fingerprint bypass is deliberately OFF.
+      DEV_TOOLS: "true"
+      ALLOW_DEV_APPROVAL: "false"
+      # Set a strong value to protect /audit and /dev endpoints in shared demos.
+      ADMIN_TOKEN: ""
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  avenza-pgdata:
