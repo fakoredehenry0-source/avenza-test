@@ -1,0 +1,126 @@
+# Avenza on the Forge 2026 sandbox (Sandbox Participant Platform Guide v1.0, §4).
+#
+# Publishing contract (§4.3): one Service named "app" on port 80 is published
+# at https://teamXX.xtradot.co. TLS ends upstream; the pod serves plain HTTP.
+#
+# deploy.sh replaces teamXX and IMAGE before applying. Do not edit secrets in
+# here: they are created by deploy.sh from your local .env.forge file.
+#
+# Quota (§7.1): namespace requests 400m CPU / 768Mi, limits 2 cores / 2Gi,
+# 1 PersistentVolume up to 10Gi. This uses 150m / 256Mi, leaving room for a
+# debugging pod.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: avenza-data
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: avenza-config
+data:
+  APP_ENV: production
+  LOG_LEVEL: INFO
+  PORT: "8080"
+  # SQLite on the persistent volume. One replica only (see the Deployment).
+  DATABASE_URL: sqlite:////data/avenza.db
+  # Xtradot Bank sandbox (§5). GATEWAY_KEY comes from the huawei-gateway secret.
+  BANK_MODE: sandbox
+  SANDBOX_BASE_URL: http://bank-api.ingress-apisix.svc.cluster.local/v1
+  SANDBOX_SOURCE_ACCOUNT: "0123456790"
+  SANDBOX_TIMEOUT_S: "12"
+  SANDBOX_SETTLE_WAIT_S: "6"
+  # 60 requests a minute shared by the bank and MaaS (§7.2); keep headroom.
+  GATEWAY_REQUESTS_PER_MIN: "55"
+  RECONCILE_INTERVAL_S: "10"
+  RECONCILE_STALE_S: "20"
+  # Huawei MaaS (§6): OpenAI-compatible, team key as the "apikey" header.
+  LLM_ENABLED: "true"
+  LLM_PROVIDER: huawei-maas
+  LLM_BASE_URL: http://huawei-maas.ingress-apisix.svc.cluster.local/openai/v1
+  LLM_MODEL: glm-5.2
+  LLM_TIMEOUT_S: "4"
+  # Speech: streaming STT and YarnGPT voice. Keys are in avenza-secrets.
+  STT_PROVIDER: ai
+  TTS_PROVIDER: yarngpt
+  STT_STREAMING: "true"
+  ALLOW_TEXT_UTTERANCE: "true"
+  AI_ENABLED: "true"
+  AI_AMOUNT_CROSSCHECK: "true"
+  # WebAuthn must match the public URL exactly.
+  WEBAUTHN_RP_ID: teamXX.xtradot.co
+  WEBAUTHN_RP_NAME: Avenza
+  WEBAUTHN_ORIGIN: https://teamXX.xtradot.co
+  # Public by default (§7.3): no developer shortcuts on the cluster.
+  DEV_TOOLS: "false"
+  ALLOW_DEV_APPROVAL: "false"
+  LATENCY_LOG: /data/latency.jsonl
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels: { app: app }
+spec:
+  # SQLite and in-memory session state: exactly one pod. Recreate so the
+  # ReadWriteOnce volume is never attached to two pods during a rollout.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: app }
+  template:
+    metadata:
+      labels: { app: app }
+    spec:
+      # imagePullSecrets: [{ name: regcred }]   # uncomment for a private image (§4.1)
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: app
+          image: IMAGE
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef: { name: avenza-config }
+            # GATEWAY_KEY: pre-provisioned by the platform team (§3.2).
+            - secretRef: { name: huawei-gateway, optional: true }
+            # DEEPGRAM_API_KEY, YARN_API_KEY, ADMIN_TOKEN, FORGE_WEBHOOK_SECRET.
+            - secretRef: { name: avenza-secrets, optional: true }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 150m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: avenza-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  selector: { app: app }
+  ports:
+    - port: 80
+      targetPort: 8080
