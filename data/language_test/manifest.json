@@ -1,0 +1,420 @@
+{
+ "note": "DRAFT reference sentences. Hausa, Igbo and Yoruba lines must be checked by a native speaker before recording. Record each as audio_file (16 kHz mono WAV).",
+ "samples": [
+  {
+   "id": "en_01",
+   "language": "en",
+   "text": "Send five thousand naira to Aisha Bello",
+   "audio_file": "en/en_01.wav",
+   "expected_kobo": 500000,
+   "expected_name": "Aisha Bello",
+   "tags": [
+    "names",
+    "amounts"
+   ]
+  },
+  {
+   "id": "en_02",
+   "language": "en",
+   "text": "Transfer fifteen thousand naira to Chinedu Okafor",
+   "audio_file": "en/en_02.wav",
+   "expected_kobo": 1500000,
+   "expected_name": "Chinedu Okafor",
+   "tags": [
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "en_03",
+   "language": "en",
+   "text": "Send fifty thousand naira to Adebayo Ogunleye",
+   "audio_file": "en/en_03.wav",
+   "expected_kobo": 5000000,
+   "expected_name": "Adebayo Ogunleye",
+   "tags": [
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "en_04",
+   "language": "en",
+   "text": "Please pay two hundred and fifty naira to Musa Ibrahim",
+   "audio_file": "en/en_04.wav",
+   "expected_kobo": 25000,
+   "expected_name": "Musa Ibrahim",
+   "tags": [
+    "amounts"
+   ]
+  },
+  {
+   "id": "en_05",
+   "language": "en",
+   "text": "Send one million two hundred thousand naira to Ngozi Eze",
+   "audio_file": "en/en_05.wav",
+   "expected_kobo": 120000000,
+   "expected_name": "Ngozi Eze",
+   "tags": [
+    "amounts"
+   ]
+  },
+  {
+   "id": "en_06",
+   "language": "en",
+   "text": "Send 7,500 naira to Aisha Bello Okafor",
+   "audio_file": "en/en_06.wav",
+   "expected_kobo": 750000,
+   "expected_name": "Aisha Bello Okafor",
+   "tags": [
+    "similar_name",
+    "digits"
+   ]
+  },
+  {
+   "id": "en_07",
+   "language": "en",
+   "text": "Send twelve thousand five hundred naira to Funke Adeyemi",
+   "audio_file": "en/en_07.wav",
+   "expected_kobo": 1250000,
+   "expected_name": "Funke Adeyemi",
+   "tags": [
+    "amounts"
+   ]
+  },
+  {
+   "id": "en_08",
+   "language": "en",
+   "text": "Send eighteen thousand naira to Tunde Bakare",
+   "audio_file": "en/en_08.wav",
+   "expected_kobo": 1800000,
+   "expected_name": "Tunde Bakare",
+   "tags": [
+    "noise",
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "en_09",
+   "language": "en",
+   "text": "Send eighty thousand naira to Halima Sani",
+   "audio_file": "en/en_09.wav",
+   "expected_kobo": 8000000,
+   "expected_name": "Halima Sani",
+   "tags": [
+    "noise",
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "en_10",
+   "language": "en",
+   "text": "Send three thousand naira to Emeka Nwosu account zero one two three four five six seven eight nine at GTBank",
+   "audio_file": "en/en_10.wav",
+   "expected_kobo": 300000,
+   "expected_name": "Emeka Nwosu",
+   "tags": [
+    "account_digits"
+   ]
+  },
+  {
+   "id": "yo_01",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún márùn-ún ránṣẹ́ sí Aisha Bello",
+   "audio_file": "yo/yo_01.wav",
+   "expected_kobo": 500000,
+   "expected_name": "Aisha Bello",
+   "tags": []
+  },
+  {
+   "id": "yo_02",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún mẹ́wàá ránṣẹ́ sí Tunde Bakare",
+   "audio_file": "yo/yo_02.wav",
+   "expected_kobo": 1000000,
+   "expected_name": "Tunde Bakare",
+   "tags": []
+  },
+  {
+   "id": "yo_03",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún méjì ránṣẹ́ sí Funke Adeyemi",
+   "audio_file": "yo/yo_03.wav",
+   "expected_kobo": 200000,
+   "expected_name": "Funke Adeyemi",
+   "tags": []
+  },
+  {
+   "id": "yo_04",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún ogún ránṣẹ́ sí Adebayo Ogunleye",
+   "audio_file": "yo/yo_04.wav",
+   "expected_kobo": 2000000,
+   "expected_name": "Adebayo Ogunleye",
+   "tags": []
+  },
+  {
+   "id": "yo_05",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún aadọ́ta ránṣẹ́ sí Kemi Balogun",
+   "audio_file": "yo/yo_05.wav",
+   "expected_kobo": 5000000,
+   "expected_name": "Kemi Balogun",
+   "tags": [
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "yo_06",
+   "language": "yo",
+   "text": "Fi naira ọgọ́rùn-ún ránṣẹ́ sí Aisha Bello",
+   "audio_file": "yo/yo_06.wav",
+   "expected_kobo": 10000,
+   "expected_name": "Aisha Bello",
+   "tags": []
+  },
+  {
+   "id": "yo_07",
+   "language": "yo",
+   "text": "Fi five thousand naira ránṣẹ́ sí Segun Alade",
+   "audio_file": "yo/yo_07.wav",
+   "expected_kobo": 500000,
+   "expected_name": "Segun Alade",
+   "tags": [
+    "code_switch"
+   ]
+  },
+  {
+   "id": "yo_08",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún mẹ́ta ránṣẹ́ sí Bisi Afolabi",
+   "audio_file": "yo/yo_08.wav",
+   "expected_kobo": 300000,
+   "expected_name": "Bisi Afolabi",
+   "tags": [
+    "noise"
+   ]
+  },
+  {
+   "id": "yo_09",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún mẹ́fà ránṣẹ́ sí Yinka Adeleke",
+   "audio_file": "yo/yo_09.wav",
+   "expected_kobo": 600000,
+   "expected_name": "Yinka Adeleke",
+   "tags": [
+    "noise"
+   ]
+  },
+  {
+   "id": "yo_10",
+   "language": "yo",
+   "text": "Fi naira ẹgbẹ̀rún fifteen ránṣẹ́ sí Wale Ojo",
+   "audio_file": "yo/yo_10.wav",
+   "expected_kobo": 1500000,
+   "expected_name": "Wale Ojo",
+   "tags": [
+    "code_switch",
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "ha_01",
+   "language": "ha",
+   "text": "Aika naira dubu biyar zuwa Aisha Bello",
+   "audio_file": "ha/ha_01.wav",
+   "expected_kobo": 500000,
+   "expected_name": "Aisha Bello",
+   "tags": []
+  },
+  {
+   "id": "ha_02",
+   "language": "ha",
+   "text": "Tura naira dubu goma sha biyar zuwa Musa Ibrahim",
+   "audio_file": "ha/ha_02.wav",
+   "expected_kobo": 1500000,
+   "expected_name": "Musa Ibrahim",
+   "tags": [
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "ha_03",
+   "language": "ha",
+   "text": "Aika naira dubu hamsin zuwa Halima Sani",
+   "audio_file": "ha/ha_03.wav",
+   "expected_kobo": 5000000,
+   "expected_name": "Halima Sani",
+   "tags": [
+    "teen_ty"
+   ]
+  },
+  {
+   "id": "ha_04",
+   "language": "ha",
+   "text": "Aika naira dari biyu da hamsin zuwa Aisha Bello",
+   "audio_file": "ha/ha_04.wav",
+   "expected_kobo": 25000,
+   "expected_name": "Aisha Bello",
+   "tags": []
+  },
+  {
+   "id": "ha_05",
+   "language": "ha",
+   "text": "Biya naira dubu ashirin da biyar ga Abdullahi Yusuf",
+   "audio_file": "ha/ha_05.wav",
+   "expected_kobo": 2500000,
+   "expected_name": "Abdullahi Yusuf",
+   "tags": []
+  },
+  {
+   "id": "ha_06",
+   "language": "ha",
+   "text": "Aika five thousand naira zuwa Aisha Bello",
+   "audio_file": "ha/ha_06.wav",
+   "expected_kobo": 500000,
+   "expected_name": "Aisha Bello",
+   "tags": [
+    "code_switch"
+   ]
+  },
+  {
+   "id": "ha_07",
+   "language": "ha",
+   "text": "Tura naira dubu uku zuwa Bashir Lawal",
+   "audio_file": "ha/ha_07.wav",
+   "expected_kobo": 300000,
+   "expected_name": "Bashir Lawal",
+   "tags": []
+  },
+  {
+   "id": "ha_08",
+   "language": "ha",
+   "text": "Aika naira dubu goma zuwa Zainab Aliyu",
+   "audio_file": "ha/ha_08.wav",
+   "expected_kobo": 1000000,
+   "expected_name": "Zainab Aliyu",
+   "tags": [
+    "noise"
+   ]
+  },
+  {
+   "id": "ha_09",
+   "language": "ha",
+   "text": "Tura naira dubu twelve zuwa Aisha Bello",
+   "audio_file": "ha/ha_09.wav",
+   "expected_kobo": 1200000,
+   "expected_name": "Aisha Bello",
+   "tags": [
+    "code_switch"
+   ]
+  },
+  {
+   "id": "ha_10",
+   "language": "ha",
+   "text": "Aika naira dubu bakwai zuwa Ibrahim Musa",
+   "audio_file": "ha/ha_10.wav",
+   "expected_kobo": 700000,
+   "expected_name": "Ibrahim Musa",
+   "tags": [
+    "noise"
+   ]
+  },
+  {
+   "id": "ig_01",
+   "language": "ig",
+   "text": "Zipu naira puku ise nye Chinedu Okafor",
+   "audio_file": "ig/ig_01.wav",
+   "expected_kobo": 500000,
+   "expected_name": "Chinedu Okafor",
+   "tags": []
+  },
+  {
+   "id": "ig_02",
+   "language": "ig",
+   "text": "Zipu naira puku abuo nye Ngozi Eze",
+   "audio_file": "ig/ig_02.wav",
+   "expected_kobo": 200000,
+   "expected_name": "Ngozi Eze",
+   "tags": []
+  },
+  {
+   "id": "ig_03",
+   "language": "ig",
+   "text": "Zipu naira puku iri nye Emeka Nwosu",
+   "audio_file": "ig/ig_03.wav",
+   "expected_kobo": 1000000,
+   "expected_name": "Emeka Nwosu",
+   "tags": []
+  },
+  {
+   "id": "ig_04",
+   "language": "ig",
+   "text": "Zipu naira nari abuo nye Chidi Obi",
+   "audio_file": "ig/ig_04.wav",
+   "expected_kobo": 20000,
+   "expected_name": "Chidi Obi",
+   "tags": []
+  },
+  {
+   "id": "ig_05",
+   "language": "ig",
+   "text": "Zipu naira nari abuo na iri ise nye Amaka Eze",
+   "audio_file": "ig/ig_05.wav",
+   "expected_kobo": 25000,
+   "expected_name": "Amaka Eze",
+   "tags": []
+  },
+  {
+   "id": "ig_06",
+   "language": "ig",
+   "text": "Zipu naira puku itoolu nye Uche Okoro",
+   "audio_file": "ig/ig_06.wav",
+   "expected_kobo": 900000,
+   "expected_name": "Uche Okoro",
+   "tags": []
+  },
+  {
+   "id": "ig_07",
+   "language": "ig",
+   "text": "Zipu five thousand naira nye Ifeanyi Okeke",
+   "audio_file": "ig/ig_07.wav",
+   "expected_kobo": 500000,
+   "expected_name": "Ifeanyi Okeke",
+   "tags": [
+    "code_switch"
+   ]
+  },
+  {
+   "id": "ig_08",
+   "language": "ig",
+   "text": "Zipu naira puku ato nye Nkechi Obi",
+   "audio_file": "ig/ig_08.wav",
+   "expected_kobo": 300000,
+   "expected_name": "Nkechi Obi",
+   "tags": [
+    "noise"
+   ]
+  },
+  {
+   "id": "ig_09",
+   "language": "ig",
+   "text": "Zipu naira puku iri abuo nye Obinna Eze",
+   "audio_file": "ig/ig_09.wav",
+   "expected_kobo": 2000000,
+   "expected_name": "Obinna Eze",
+   "tags": [
+    "noise"
+   ]
+  },
+  {
+   "id": "ig_10",
+   "language": "ig",
+   "text": "Zipu naira puku twelve nye Ada Nwosu",
+   "audio_file": "ig/ig_10.wav",
+   "expected_kobo": 1200000,
+   "expected_name": "Ada Nwosu",
+   "tags": [
+    "code_switch"
+   ]
+  }
+ ]
+}
