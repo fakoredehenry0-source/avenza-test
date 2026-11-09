@@ -27,6 +27,13 @@ services:
       STT_PROVIDER: mock
       TTS_PROVIDER: mock
       ALLOW_TEXT_UTTERANCE: "true"
+      # AI/ML layer is integrated; mock speech and no live provider keys.
+      AI_ENABLED: "true"
+      AI_INTENT_ENABLED: "true"
+      AI_AMOUNT_CROSSCHECK: "false"
+      AI_READBACK: "false"
+      AI_HISTORY: "true"
+      AI_LANGUAGES: en
       # WebAuthn must match the URL the browser shows.
       WEBAUTHN_RP_ID: localhost
       WEBAUTHN_RP_NAME: Avenza

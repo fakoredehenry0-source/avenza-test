@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, text
 
 from . import __version__
+from .ai import build_ai
 from .audit import AuditService
 from .bank import BANK_NAMES, DEMO_ACCOUNTS, MockBank, build_bank, seed_mock_bank
 from .config import Settings, load_settings
@@ -90,12 +91,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     prompts = PromptLibrary(settings.prompt_dir)
     stt = build_stt(settings)
     tts = build_tts(settings)
-    intent = IntentClassifier(settings)
+    ai = build_ai(settings)
+    intent = ai if ai is not None else IntentClassifier(settings)
     bank = build_bank(settings, session_factory)
     devices = DeviceService(session_factory, audit, security, settings)
     sessions = SessionService(session_factory, audit, settings)
     transfers = TransferService(session_factory, audit, bank, security, prompts, settings)
-    orchestrator = TurnOrchestrator(settings, prompts, stt, tts, intent, bank, transfers, sessions)
+    orchestrator = TurnOrchestrator(
+        settings, prompts, stt, tts, intent, bank, transfers, sessions, ai=ai
+    )
 
     settings.web_dir.mkdir(parents=True, exist_ok=True)
     settings.prompt_dir.mkdir(parents=True, exist_ok=True)
@@ -137,6 +141,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.stt = stt
     app.state.tts = tts
     app.state.intent = intent
+    app.state.ai = ai
     app.state.bank = bank
     app.state.devices = devices
     app.state.sessions = sessions
@@ -200,6 +205,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "stt": {"provider": stt.name, "simulated": stt.simulated},
             "tts": {"provider": tts.name, "simulated": tts.simulated},
             "llm": {"enabled": settings.llm_enabled, "amount_authority": "deterministic_parser_only"},
+            "ai": ai.status() if ai is not None else {"enabled": False},
             "webauthn": {
                 "rp_id": settings.webauthn_rp_id,
                 "origin": settings.webauthn_origin,
@@ -249,6 +255,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "available": list(PROMPTS.keys()),
             },
             "demo_accounts": demo_accounts,
+        }
+
+    @app.get("/ai/status")
+    def ai_status():
+        return {
+            "ai": ai.status() if ai is not None else {"enabled": False},
+            "amount_authority": "backend_deterministic_parser",
+            "approval": "webauthn_backend_verified_only",
         }
 
     @app.get("/prompts")

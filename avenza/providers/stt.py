@@ -219,6 +219,10 @@ def build_stt(settings: Settings) -> STTProvider:
             return HttpSTT("yarn", settings.yarn_asr_url, settings.yarn_api_key)
         if choice == "sahara":
             return HttpSTT("sahara", settings.sahara_asr_url, settings.sahara_api_key)
+        if choice == "ai":
+            from .ai_speech import AIWebSocketSTT
+
+            return AIWebSocketSTT(settings)
     except ProviderNotConfigured:
         pass
     return MockSTT()
@@ -299,6 +303,10 @@ def build_tts(settings: Settings):
     try:
         if settings.tts_provider == "yarn":
             return YarnTTS(settings)
+        if settings.tts_provider in {"ai", "yarngpt"}:
+            from .ai_speech import AIYarnTTS
+
+            return AIYarnTTS(settings)
     except ProviderNotConfigured:
         pass
     return MockTTS()

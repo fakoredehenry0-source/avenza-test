@@ -13,3 +13,6 @@ certs/
 *.key
 *.log
 .DS_Store
+reports/
+recordings/
+data/prompts/

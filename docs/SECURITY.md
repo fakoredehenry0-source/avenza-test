@@ -41,6 +41,11 @@ These are the rules that must never be weakened. Each has a test.
 10. **No PINs, card numbers, or funds are stored.**
     Only the minimum transfer metadata, a credential public key, and audit
     rows. Money is an integer number of kobo.
+11. **The AI/ML layer cannot approve or set an amount.**
+    `avenza.ai.workflow` may only classify intent, cross-check a parsed number
+    (forcing a clarification), render a read-back or transcribe audio. It never
+    writes a transfer state. `AI_AMOUNT_CROSSCHECK` can only ask again; the
+    backend parser remains the amount authority.
 
 Never merge a change that lets a payment complete without a verified approval.
 
@@ -63,6 +68,8 @@ Never merge a change that lets a payment complete without a verified approval.
 | Brute-force fingerprint retries | Three failed reads cancel the draft. |
 | Cross-origin WebSocket abuse in production | Origin allow-list from `WEBAUTHN_ORIGIN`. |
 | Cross-user transfer access | `/transfers/{id}` checks ownership; mismatches return 404. |
+| An AI/model output is treated as payment approval | The AI bridge never writes transfer state; `APPROVED` still requires a verified WebAuthn assertion. |
+| An AI/model output changes the amount | The backend parser is authoritative; the AI cross-check can only force a clarification. |
 
 ### Out of scope
 
@@ -210,6 +217,9 @@ database as sensitive.
 - The parser rejects zero, multiple amounts, unsupported currencies, and bare
   number words without a currency or scale.
 - The LLM, if enabled, only classifies intent. It never supplies an amount.
+- The AI/ML layer is advisory. Its parser cross-check can only ask the customer
+  to repeat; its read-back always uses the bank-verified name. It cannot approve
+  or submit anything.
 - `/transfers/{id}` returns a masked account (`******6789`); the full number is
   used only for the bank call.
 - The signed WebAuthn assertion is stored on the transfer for audit. It contains
@@ -254,6 +264,10 @@ Before exposing an instance beyond your machine:
 - [ ] A real bank adapter with signed contracts, not `BANK_MODE=mock` or the
       placeholder sandbox.
 - [ ] A real STT/TTS provider, with consent wording that names it.
+- [ ] If `STT_PROVIDER=ai` or `TTS_PROVIDER=ai`, confirm the provider credentials
+      and the language-test result before claiming any non-English language.
+- [ ] Leave `AI_AMOUNT_CROSSCHECK` as a clarification-only control; never let an
+      AI output become the amount.
 - [ ] Audit head hash exported to an append-only location.
 - [ ] Rate limiting and WAF in front of `/ws` and enrolment.
 - [ ] A privacy notice and lawful basis for voice processing.

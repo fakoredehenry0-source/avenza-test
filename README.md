@@ -24,6 +24,7 @@ real money and is labelled as simulated everywhere it appears.
 | Bank | **Simulated** by default. A sandbox adapter exists but its endpoints are placeholders marked `CONFIRM`. No real money moves. |
 | Speech-to-text | **Simulated** by default: the browser's speech recognition or typed text supplies the transcript. Deepgram/Yarn/Sahara adapters exist but are not tested against live accounts. |
 | Text-to-speech | **Simulated** by default: the browser speaks the prompts. Optional WAV prompt files can be generated. |
+| AI/ML layer | **Integrated.** The vendored `avenza_ai` package adds hybrid intent (keyword + optional Llama), a deterministic amount cross-check, AI read-backs, richer history phrases, streaming STT and YarnGPT TTS. It cannot approve a transfer. |
 | Yorùbá / Hausa / Igbo / Pidgin | **Unverified translations.** Only English is claimed as checked. |
 | KYC, holding funds, settlement, real bank | **Not implemented.** Out of scope for this design. |
 
@@ -83,8 +84,9 @@ python -m pytest -q
 The suite covers the parser, state machine, transfers (double tap, repeated
 command, lost reply, timeout then retry, exactly one payment), WebAuthn approval
 (no approval / expired / replayed / modified / wrong device), audit tampering,
-the orchestrator, REST and WebSocket behaviour. It uses an in-memory SQLite
-database and a software authenticator; no network or hardware is required.
+the orchestrator, REST and WebSocket behaviour, the AI/ML package and its
+integration. It uses an in-memory SQLite database and a software authenticator;
+no network or hardware is required. Current count: **415 tests**.
 
 ---
 
@@ -103,11 +105,13 @@ database and a software authenticator; no network or hardware is required.
 │  ws.py          session + utterance protocol                       │
 │  orchestrator   turn handling, field collection, read-back         │
 │  intent.py      deterministic keywords; optional LLM (intent only) │
+│  ai/            bridge to the vendored AI/ML package               │
 │  parser.py      amount / account / bank / time (authoritative)     │
 │  services/      transfers, devices, sessions                       │
 │  security.py    WebAuthn registration + approval + unlock          │
 │  bank/          BankAdapter → MockBank or SandboxBank              │
 │  audit.py       SHA-256 hash chain                                 │
+│  avenza_ai/     vendored AI/ML: intent, speech, read-back, eval     │
 └──────────────────────────────────────┬─────────────────────────────┘
                                        │
                           SQLite / PostgreSQL (SQLAlchemy 2)
@@ -156,6 +160,14 @@ Copy `.env.example` to `.env` and edit. The important switches:
 | `STT_PROVIDER` | `mock` | `mock`, `deepgram`, `yarn`, `sahara`. |
 | `TTS_PROVIDER` | `mock` | `mock` (browser speech) or `yarn`. |
 | `ALLOW_TEXT_UTTERANCE` | `true` | Allows typed/browser-recognition text in the demo. |
+| `AI_ENABLED` | `true` | Master switch for the integrated AI/ML layer. |
+| `AI_INTENT_ENABLED` | `true` | Hybrid AI intent for paraphrases the keyword layer misses. |
+| `AI_AMOUNT_CROSSCHECK` | `false` | Ask again if the AI parser disagrees; never replaces the backend amount. |
+| `AI_READBACK` | `false` | Use the AI read-back template. |
+| `AI_HISTORY` | `true` | Use AI time phrases for history. |
+| `AI_LANGUAGES` | `en` | Languages enabled for number/intent words. Only `en` is verified. |
+| `STT_PROVIDER` = `ai` | `mock` | Use the AI streaming STT registry (falls back to mock without keys). |
+| `TTS_PROVIDER` = `ai` | `mock` | Use YarnGPT TTS through the AI package. |
 | `WEBAUTHN_RP_ID` | `localhost` | Registrable domain; must match the browser URL. |
 | `WEBAUTHN_ORIGIN` | `http://localhost:8000` | Exact scheme + host + port. |
 | `MAX_AMOUNT_KOBO` | `100000000` | ₦1,000,000 default cap. |
@@ -175,8 +187,9 @@ CORS, and unauthenticated admin access. It does not by itself make the bank real
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/health` | Liveness, bank/STT/TTS mode, limits, WebAuthn config. |
+| `GET` | `/health` | Liveness, bank/STT/TTS/AI mode, limits, WebAuthn config. |
 | `GET` | `/config` | Public demo config and mock accounts. |
+| `GET` | `/ai/status` | AI/ML switches and the amount/approval authority statement. |
 | `POST` | `/devices/register/options` | Start WebAuthn enrolment. |
 | `POST` | `/devices/register/verify` | Verify attestation, return device token once. |
 | `POST` | `/consents` | Record consent (device token required). |
@@ -299,6 +312,7 @@ avenza/
   orchestrator.py  turn flow, field collection, read-back, approval
   parser.py        deterministic amount/account/bank/time parser
   intent.py        keyword intent + optional LLM classifier
+  ai/              bridge to the vendored AI/ML package
   state_machine.py transfer states and allowed transitions
   security.py      WebAuthn registration/approval/unlock
   audit.py         hash-chained audit log
@@ -306,10 +320,12 @@ avenza/
   bank/            adapter, mock ledger, sandbox placeholder
   providers/       STT/TTS interfaces and adapters
   services/        transfers, devices, sessions
+avenza_ai/         vendored AI/ML layer (intent, parsing, speech, eval)
+data/              language-test manifest used by the AI evaluation tools
 web/               installable PWA (HTML/CSS/JS, service worker, icons)
-scripts/           cert, prompt audio, seed, icons
-tests/             pytest suite + software WebAuthn authenticator
-docs/              protocol, security, demo
+scripts/           cert, prompt audio, seed, icons, AI demo
+tests/             pytest suite + software WebAuthn authenticator + tests/ai
+docs/              protocol, security, demo, AI integration, docs/ai
 ```
 
 ---
@@ -320,6 +336,9 @@ docs/              protocol, security, demo
 - The sandbox adapter is a placeholder; endpoints must be confirmed with the
   provider before use.
 - Live STT/TTS adapters are not verified against provider accounts.
+- The AI/ML layer is built and unit-tested on mocks. It has not been run
+  against live providers, real audio or real users. Non-English number words and
+  prompts still need a native-speaker review and the language test.
 - Non-English prompts are unverified translations and the UI says so.
 - SQLite is the default. Postgres is supported and used by Docker, but there is
   no migration tooling.

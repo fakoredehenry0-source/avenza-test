@@ -299,6 +299,7 @@ X-Device-Token: <device_token>
 | --- | --- | --- | --- |
 | `GET` | `/health` | none | Status, modes, limits, WebAuthn config. |
 | `GET` | `/config` | none | Public config, demo accounts in mock/dev mode. |
+| `GET` | `/ai/status` | none | AI switches, languages, amount/approval authority. |
 | `GET` | `/prompts` | none | Prompt text for every language. |
 | `POST` | `/devices/register/options` | none | Body: `display_name`, `language`, optional `user_id`/`device_token`. |
 | `POST` | `/devices/register/verify` | none | Body: `challenge_id`, `credential`. Returns device token **once**. |

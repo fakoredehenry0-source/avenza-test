@@ -66,6 +66,24 @@ class Settings:
     llm_model: str = "llama-3.1-8b-instant"
     llm_timeout_s: float = 1.5
 
+    # AI/ML layer (vendored avenza_ai package). The backend parser remains the
+    # amount authority; the AI layer is advisory and can never approve a transfer.
+    ai_enabled: bool = True
+    ai_intent_enabled: bool = True
+    ai_amount_crosscheck: bool = False
+    ai_readback: bool = False
+    ai_history: bool = True
+    ai_languages: str = "en"
+    ai_default_language: str = "en"
+    ai_provider_choice: str = "reports/provider_choice.json"
+    ai_stt_timeout_s: float = 30.0
+
+    # YarnGPT names used by the AI package. YARN_* remains supported.
+    yarngpt_api_key: str = ""
+    yarngpt_asr_url: str = ""
+    yarngpt_tts_url: str = ""
+    yarngpt_default_voice: str = ""
+
     webauthn_rp_id: str = "localhost"
     webauthn_rp_name: str = "Avenza"
     webauthn_origin: str = "http://localhost:8000"
@@ -134,6 +152,19 @@ def load_settings() -> Settings:
         llm_api_key=os.getenv("LLM_API_KEY", ""),
         llm_model=os.getenv("LLM_MODEL", "llama-3.1-8b-instant"),
         llm_timeout_s=_float("LLM_TIMEOUT_S", 1.5),
+        ai_enabled=_bool("AI_ENABLED", True),
+        ai_intent_enabled=_bool("AI_INTENT_ENABLED", True),
+        ai_amount_crosscheck=_bool("AI_AMOUNT_CROSSCHECK", False),
+        ai_readback=_bool("AI_READBACK", False),
+        ai_history=_bool("AI_HISTORY", True),
+        ai_languages=os.getenv("AI_LANGUAGES", "en"),
+        ai_default_language=os.getenv("AI_DEFAULT_LANGUAGE", "en"),
+        ai_provider_choice=os.getenv("AI_PROVIDER_CHOICE", "reports/provider_choice.json"),
+        ai_stt_timeout_s=_float("AI_STT_TIMEOUT_S", 30.0),
+        yarngpt_api_key=os.getenv("YARNGPT_API_KEY", os.getenv("YARN_API_KEY", "")),
+        yarngpt_asr_url=os.getenv("YARNGPT_ASR_WS_URL", os.getenv("YARN_ASR_URL", "")),
+        yarngpt_tts_url=os.getenv("YARNGPT_TTS_URL", os.getenv("YARN_TTS_URL", "")),
+        yarngpt_default_voice=os.getenv("YARNGPT_DEFAULT_VOICE", os.getenv("YARN_TTS_VOICE", "")),
         webauthn_rp_id=os.getenv("WEBAUTHN_RP_ID", "localhost"),
         webauthn_rp_name=os.getenv("WEBAUTHN_RP_NAME", "Avenza"),
         webauthn_origin=os.getenv("WEBAUTHN_ORIGIN", "http://localhost:8000"),

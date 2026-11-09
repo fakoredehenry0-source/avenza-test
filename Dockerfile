@@ -15,6 +15,8 @@ COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY avenza ./avenza
+COPY avenza_ai ./avenza_ai
+COPY data ./data
 COPY web ./web
 COPY scripts ./scripts
 COPY run.py ./

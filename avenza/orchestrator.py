@@ -4,7 +4,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Awaitable, Callable
+from typing import TYPE_CHECKING, Awaitable, Callable
 
 from .bank import BANK_NAMES, BankAdapter, BankNotFound, BankUnavailable
 from .config import Settings
@@ -15,6 +15,9 @@ from .prompts import PROMPTS, PromptLibrary
 from .services import SessionService, TransferLocked, TransferService
 from .state_machine import TransferState, display_state
 from .timeutil import utcnow
+
+if TYPE_CHECKING:
+    from .ai.workflow import AIWorkflow
 
 logger = logging.getLogger("avenza.orchestrator")
 
@@ -51,6 +54,7 @@ class TurnOrchestrator:
         bank: BankAdapter,
         transfers: TransferService,
         sessions: SessionService,
+        ai: "AIWorkflow | None" = None,
     ):
         self.settings = settings
         self.prompts = prompts
@@ -60,6 +64,7 @@ class TurnOrchestrator:
         self.bank = bank
         self.transfers = transfers
         self.sessions = sessions
+        self.ai = ai
 
     # ------------------------------------------------------------------
     # Event helpers
@@ -73,6 +78,35 @@ class TurnOrchestrator:
             "language": prompt.language,
             "audio_url": prompt.audio_url,
         }
+
+    async def _classify(self, text: str, state: str | None = None, language: str = "en"):
+        """Use the AI-augmented classifier when wired, else the backend one.
+
+        The AI layer is advisory: it is only consulted for genuinely unclear
+        requests, and confirmations never come from it.
+        """
+        if self.ai is not None:
+            return await self.ai.classify(text, state=state, language=language)
+        return await self.intent.classify(text, state=state, language=language)
+
+    def _readback_prompt(self, ctx: SessionContext, transfer) -> dict:
+        """Read-back prompt, optionally rendered by the AI template.
+
+        The bank-verified name is always used. If the AI template cannot render
+        (missing name/amount), the backend prompt is used unchanged.
+        """
+        if self.ai is not None:
+            text = self.ai.readback(
+                transfer.amount_kobo,
+                transfer.verified_recipient_name,
+                bank_name=BANK_NAMES.get(transfer.bank_code, transfer.bank_code),
+                language=ctx.language,
+            )
+            if text:
+                event = self._prompt(ctx, "readback", **_readback_fields(transfer))
+                event["text"] = text
+                return event
+        return self._prompt(ctx, "readback", **_readback_fields(transfer))
 
     @staticmethod
     def _state(transfer) -> dict:
@@ -148,7 +182,7 @@ class TurnOrchestrator:
         }:
             return [
                 self._state(active),
-                self._prompt(ctx, "readback", **_readback_fields(active)),
+                self._readback_prompt(ctx, active),
                 self._listening(),
             ]
         if active.state == TransferState.CONFIRMED_BY_VOICE.value:
@@ -254,7 +288,7 @@ class TurnOrchestrator:
                 return events
 
             if state == TransferState.CONFIRMED_BY_VOICE.value:
-                result = await self.intent.classify(text, state=state, language=ctx.language)
+                result = await self._classify(text, state=state, language=ctx.language)
                 if result.intent in {Intent.NO, Intent.CANCEL}:
                     transfer = self.transfers.cancel(active.id, reason="voice_cancel")
                     events.append(self._state(transfer))
@@ -266,7 +300,7 @@ class TurnOrchestrator:
                 return events
 
             if state == TransferState.AWAITING_BIOMETRIC.value:
-                result = await self.intent.classify(text, state=state, language=ctx.language)
+                result = await self._classify(text, state=state, language=ctx.language)
                 if result.intent in {Intent.NO, Intent.CANCEL}:
                     transfer = self.transfers.cancel(active.id, reason="voice_cancel")
                     events.append(self._state(transfer))
@@ -304,7 +338,7 @@ class TurnOrchestrator:
     # No active transfer
     # ------------------------------------------------------------------
     async def _handle_no_active(self, ctx: SessionContext, text: str) -> list[dict]:
-        result = await self.intent.classify(text, state=None, language=ctx.language)
+        result = await self._classify(text, state=None, language=ctx.language)
         events: list[dict] = []
 
         if result.intent == Intent.LOCK:
@@ -348,6 +382,13 @@ class TurnOrchestrator:
     async def _handle_transfer_request(self, ctx: SessionContext, text: str) -> list[dict]:
         events: list[dict] = []
         fields = extract_transfer_fields(text, max_kobo=self.settings.max_amount_kobo)
+        if fields.amount is not None and self.ai is not None:
+            issue = self.ai.crosscheck_amount(text, fields.amount.kobo)
+            if issue:
+                # The AI cross-check can only force a clarification; it never
+                # supplies or replaces the amount.
+                fields.amount = None
+                fields.amount_error = issue
         acc = ctx.accumulator
 
         if fields.amount is not None:
@@ -358,7 +399,7 @@ class TurnOrchestrator:
             "invalid_amount",
             "amount_too_large",
             "unsupported_currency",
-        }:
+        } or (fields.amount_error or "").startswith("ai_"):
             acc.pop("amount", None)
             acc["amount_error"] = fields.amount_error
 
@@ -382,7 +423,9 @@ class TurnOrchestrator:
             events.append(self._prompt(ctx, "amount_too_large", limit=format_naira(self.settings.max_amount_kobo)))
             events.append(self._listening())
             return events
-        if acc.get("amount_error") in {"ambiguous_amount", "invalid_amount", "unsupported_currency"}:
+        if acc.get("amount_error") in {"ambiguous_amount", "invalid_amount", "unsupported_currency"} or str(
+            acc.get("amount_error") or ""
+        ).startswith("ai_"):
             acc.pop("amount_error", None)
             events.append(self._error("ambiguous_amount", "clarify_amount", "unclear amount"))
             events.append(self._prompt(ctx, "clarify_amount"))
@@ -481,7 +524,7 @@ class TurnOrchestrator:
         ctx.collecting = False
         ctx.unclear_count = 0
         events.append(self._state(transfer))
-        events.append(self._prompt(ctx, "readback", **_readback_fields(transfer)))
+        events.append(self._readback_prompt(ctx, transfer))
         events.append(self._listening())
         return events
 
@@ -490,7 +533,7 @@ class TurnOrchestrator:
     # ------------------------------------------------------------------
     async def _handle_readback_reply(self, ctx: SessionContext, transfer, text: str) -> list[dict]:
         events: list[dict] = []
-        result = await self.intent.classify(text, state=transfer.state, language=ctx.language)
+        result = await self._classify(text, state=transfer.state, language=ctx.language)
 
         if result.intent in {Intent.NO, Intent.CANCEL}:
             cancelled = self.transfers.cancel(transfer.id, reason="voice_no")
@@ -502,7 +545,7 @@ class TurnOrchestrator:
 
         if result.intent == Intent.REPEAT:
             events.append(self._state(transfer))
-            events.append(self._prompt(ctx, "readback", **_readback_fields(transfer)))
+            events.append(self._readback_prompt(ctx, transfer))
             events.append(self._listening())
             ctx.unclear_count = 0
             return events
@@ -512,7 +555,7 @@ class TurnOrchestrator:
             outcome = self.transfers.record_confirmation(transfer.id, Intent.YES)
             if outcome.outcome == "more_confirmation":
                 events.append(self._state(outcome.transfer))
-                events.append(self._prompt(ctx, "readback", **_readback_fields(outcome.transfer)))
+                events.append(self._readback_prompt(ctx, outcome.transfer))
                 events.append(self._listening())
                 return events
             return await self._begin_approval(ctx, transfer.id)
@@ -673,6 +716,13 @@ class TurnOrchestrator:
     # ------------------------------------------------------------------
     def _history_events(self, ctx: SessionContext, text: str) -> list[dict]:
         query = parse_history_query(text)
+        # The AI time-phrase parser adds "in October", "this year", "5 days
+        # ago" and similar. Use it only when the backend fell back to its
+        # default window, so existing behaviour is preserved.
+        if self.ai is not None and query.label == "the last 30 days":
+            ai_query = self.ai.history_query(text, limit=query.limit)
+            if ai_query is not None:
+                query = ai_query
         rows = self.transfers.history(ctx.user_id, query.start, query.end, query.limit)
         events: list[dict] = [
             {
